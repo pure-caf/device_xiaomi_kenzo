@@ -29,3 +29,27 @@
 
 on early-init
     export LD_SHIM_LIBS "/system/vendor/lib64/lib-imsvt.so|libshims_ims.so:/system/bin/mm-qcamera-daemon|libshims_camera.so"
+    
+on post-fs-data
+    # fingerprint
+    chown system system  /dev/goodix_fp
+    chmod 0644 /dev/goodix_fp
+    chown system system  /system/bin/gx_fpd
+    chmod 0755 /system/bin/gx_fpd
+    
+    mkdir /data/goodix 0770 system system
+    
+on boot
+service gx_fpd /system/bin/gx_fpd
+    class late_start
+    user root
+    group root system
+    disabled
+    seclabel u:r:goodix:s0
+    writepid /dev/cpuset/system-background/tasks
+    
+on property:persist.sys.fp.goodix=0
+    stop gx_fpd
+
+on property:persist.sys.fp.goodix=1
+    start gx_fpd
